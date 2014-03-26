@@ -62,27 +62,38 @@ class Updater extends Plugin {
 				// bah, also humbug
 				putenv("PATH=" . getenv("PATH") . PATH_SEPARATOR . "/bin" .
 					PATH_SEPARATOR . "/usr/bin");
+				if (strtoupper(substr(PHP_OS, 0, 3)) != 'WIN') {
 
-				array_push($log, "Checking for tar...");
+					array_push($log, "Checking for tar...");
 
-				$system_rc = 0;
-				system("which tar >/dev/null", $system_rc);
+					$system_rc = 0;
+					system("which tar >/dev/null", $system_rc);
 
-				if ($system_rc != 0) {
-					array_push($log, "Could not run tar executable (RC=$system_rc).");
-					$stop = true; break;
+					if ($system_rc != 0) {
+						array_push($log, "Could not run tar executable (RC=$system_rc).");
+						$stop = true; break;
+					}
+
+					array_push($log, "Checking for gunzip...");
+
+					$system_rc = 0;
+					system("which gunzip >/dev/null", $system_rc);
+
+					if ($system_rc != 0) {
+						array_push($log, "Could not run gunzip executable (RC=$system_rc).");
+						$stop = true; break;
+					}
+				} else {
+					array_push($log, "Checking for 7zip...");
+
+					$system_rc = 0;
+					system("c:\\Program Files\\7-Zip\\7z.exe > NUL", $system_rc);
+
+					if ($system_rc != 1) {
+						array_push($log, "Could not run 7z executable (RC=$system_rc).");
+						$stop = true; break;
+					}
 				}
-
-				array_push($log, "Checking for gunzip...");
-
-				$system_rc = 0;
-				system("which gunzip >/dev/null", $system_rc);
-
-				if ($system_rc != 0) {
-					array_push($log, "Could not run gunzip executable (RC=$system_rc).");
-					$stop = true; break;
-				}
-
 				array_push($log, "Checking for latest version...");
 
 				$version_info = json_decode(fetch_file_contents("http://tt-rss.org/version.php"),
@@ -94,7 +105,7 @@ class Updater extends Plugin {
 				}
 
 				$target_version = $version_info["version"];
-				$target_dir = "$parent_dir/Tiny-Tiny-RSS-$target_version";
+				$target_dir = "$parent_dir" . PATH_SEPARATOR . "Tiny-Tiny-RSS-$target_version";
 
 				array_push($log, "Target version: $target_version");
 				$params["target_version"] = $target_version;
@@ -185,15 +196,26 @@ class Updater extends Plugin {
 					$stop = true; break;
 				}
 
-				array_push($log, "Extracting tarball...");
-				system("tar zxf $tmp_file", $system_rc);
+				if (strtoupper(substr(PHP_OS, 0, 3)) != 'WIN') {
+					array_push($log, "Extracting tarball...");
+					system("tar zxf $tmp_file", $system_rc);
 
-				if ($system_rc != 0) {
-					array_push($log, "Error while extracting tarball (RC=$system_rc).");
-					$stop = true; break;
+					if ($system_rc != 0) {
+						array_push($log, "Error while extracting tarball (RC=$system_rc).");
+						$stop = true; break;
+					}
+				} else {
+					array_push($log, "Extracting tarball with 7z...");
+					$cmd = '"c:\\Program Files\\7-Zip\\7z.exe" x -so -tgzip '.$tmp_file.' | "c:\\Program Files\\7-Zip\\7z.exe" x -y -si -ttar -o'.$parent_dir.' > NUL';
+					system($cmd, $system_rc);
+
+					if ($system_rc != 2) {
+						array_push($log, "Error while extracting tarball with 7z (RC=$system_rc).");
+						$stop = true; break;
+					}	
 				}
 
-				$target_dir = "$parent_dir/Tiny-Tiny-RSS-$target_version";
+				$target_dir = "$parent_dir" . PATH_SEPARATOR . "Tiny-Tiny-RSS-$target_version";
 
 				if (!is_dir($target_dir)) {
 					array_push($log, "Target directory ($target_dir) not found.");
@@ -220,7 +242,7 @@ class Updater extends Plugin {
 				}
 
 				array_push($log, "Copying config.php...");
-				if (!copy("$old_dir/config.php", "$work_dir/config.php")) {
+				if (!copy("$old_dir" . PATH_SEPARATOR . "config.php", "$work_dir" . PATH_SEPARATOR . "config.php")) {
 					array_push($log, "Unable to copy config.php to $work_dir.");
 					$stop = true; break;
 				}
@@ -313,7 +335,7 @@ class Updater extends Plugin {
 	}
 
 	function get_prefs_js() {
-		return file_get_contents(dirname(__FILE__) . "/updater.js");
+		return file_get_contents(dirname(__FILE__) . PATH_SEPARATOR . "updater.js");
 	}
 
 	function hook_prefs_tab($args) {
