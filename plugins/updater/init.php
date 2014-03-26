@@ -105,7 +105,7 @@ class Updater extends Plugin {
 				}
 
 				$target_version = $version_info["version"];
-				$target_dir = "$parent_dir" . PATH_SEPARATOR . "Tiny-Tiny-RSS-$target_version";
+				$target_dir = "$parent_dir" . DIRECTORY_SEPARATOR . "Tiny-Tiny-RSS-$target_version";
 
 				array_push($log, "Target version: $target_version");
 				$params["target_version"] = $target_version;
@@ -215,7 +215,7 @@ class Updater extends Plugin {
 					}	
 				}
 
-				$target_dir = "$parent_dir" . PATH_SEPARATOR . "Tiny-Tiny-RSS-$target_version";
+				$target_dir = "$parent_dir" . DIRECTORY_SEPARATOR . "Tiny-Tiny-RSS-$target_version";
 
 				if (!is_dir($target_dir)) {
 					array_push($log, "Target directory ($target_dir) not found.");
@@ -242,7 +242,7 @@ class Updater extends Plugin {
 				}
 
 				array_push($log, "Copying config.php...");
-				if (!copy("$old_dir" . PATH_SEPARATOR . "config.php", "$work_dir" . PATH_SEPARATOR . "config.php")) {
+				if (!copy("$old_dir" . DIRECTORY_SEPARATOR . "config.php", "$work_dir" . DIRECTORY_SEPARATOR . "config.php")) {
 					array_push($log, "Unable to copy config.php to $work_dir.");
 					$stop = true; break;
 				}
@@ -335,7 +335,7 @@ class Updater extends Plugin {
 	}
 
 	function get_prefs_js() {
-		return file_get_contents(dirname(__FILE__) . PATH_SEPARATOR . "updater.js");
+		return file_get_contents(dirname(__FILE__) . DIRECTORY_SEPARATOR . "updater.js");
 	}
 
 	function hook_prefs_tab($args) {
